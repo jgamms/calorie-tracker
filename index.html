@@ -738,4 +738,101 @@
 
                         document.body.appendChild(confetti);
 
-                        //
+                        // Remove confetti after animation
+                        setTimeout(() => {
+                            if (confetti.parentNode) {
+                                confetti.remove();
+                            }
+                        }, duration * 1000);
+                    }, i * 20);
+                }
+            }
+
+            // Data persistence methods
+            saveData() {
+                try {
+                    const data = {
+                        date: new Date().toDateString(),
+                        entries: this.foodEntries,
+                        totals: this.dailyTotals,
+                        version: '1.0' // For future migrations
+                    };
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+                } catch (error) {
+                    console.warn('Failed to save data:', error);
+                    // Could show a non-intrusive notification here
+                }
+            }
+
+            loadData() {
+                try {
+                    const savedData = localStorage.getItem(CONFIG.STORAGE_KEY);
+                    if (!savedData) return;
+
+                    const data = JSON.parse(savedData);
+                    const today = new Date().toDateString();
+
+                    // Check if data is from today
+                    if (data.date === today) {
+                        this.foodEntries = data.entries || [];
+                        this.dailyTotals = { ...this.initializeTotals(), ...data.totals };
+                    } else {
+                        // Clear old data
+                        localStorage.removeItem(CONFIG.STORAGE_KEY);
+                    }
+                } catch (error) {
+                    console.warn('Failed to load data:', error);
+                    // Reset to clean state on error
+                    this.foodEntries = [];
+                    this.dailyTotals = this.initializeTotals();
+                }
+            }
+
+            // Utility methods
+            roundToOneDecimal(num) {
+                return Math.round(num * 10) / 10;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            announceToScreenReader(message) {
+                this.elements.announcements.textContent = message;
+                // Clear after announcement
+                setTimeout(() => {
+                    this.elements.announcements.textContent = '';
+                }, 1000);
+            }
+        }
+
+        // Initialize the application when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.calorieTracker = new CalorieTracker();
+            });
+        } else {
+            window.calorieTracker = new CalorieTracker();
+        }
+
+        // Handle page visibility for better performance
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Save data when page is hidden
+                if (window.calorieTracker) {
+                    window.calorieTracker.saveData();
+                }
+            }
+        });
+
+        // Save data before page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.calorieTracker) {
+                window.calorieTracker.saveData();
+            }
+        });
+    </script>
+</body>
+</html>
