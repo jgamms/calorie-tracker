@@ -3,57 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Calorie Tracker</title>
+    <meta name="description" content="Track your daily calorie and macronutrient intake with this simple, visual calorie tracker">
+    <meta name="theme-color" content="#667eea">
+    
+    <title>My Calorie Tracker - Daily Nutrition Tracking</title>
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        /* Custom styles that can't be replicated with Tailwind */
+        /* CSS Custom Properties for consistent theming */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --color-calories: #ff6b6b;
+            --color-protein: #4ecdc4;
+            --color-carbs: #45b7d1;
+            --color-fat: #96ceb4;
+            --animation-fast: 400ms;
+            --animation-medium: 800ms;
+            --animation-slow: 2s;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.4);
+            --focus-ring: 0 0 0 3px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Base styles */
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
+
+        /* Focus styles for accessibility */
+        *:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        /* Smooth transitions for progress bars */
         .progress-fill {
             transition: width 0.5s ease-out;
         }
-        
-        .add-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: transform 0.2s ease;
+
+        /* Button styles */
+        .btn-primary {
+            background: var(--primary-gradient);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
-        .add-btn:hover {
+
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
-        
-        .add-btn.success {
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary.success {
             background: #28a745 !important;
             transform: scale(0.95);
         }
-        
-        .success-popup {
-            animation: successPop 0.6s ease-out forwards;
-            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
-        }
-        
-        @keyframes successPop {
-            0% {
+
+        /* Reusable animations */
+        @keyframes fadeInScale {
+            from {
                 transform: translate(-50%, -50%) scale(0);
                 opacity: 0;
             }
-            50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 1;
-            }
-            100% {
+            to {
                 transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
         }
-        
-        .food-item.new-item {
-            animation: slideInUp 0.4s ease-out;
-        }
-        
+
         @keyframes slideInUp {
             from {
                 opacity: 0;
@@ -64,39 +91,13 @@
                 transform: translateY(0);
             }
         }
-        
-        .progress-item.updated {
-            animation: progressBounce 0.4s ease-out;
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-        
-        @keyframes progressBounce {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-        
-        /* Confetti Animation */
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            z-index: 1000;
-            pointer-events: none;
-        }
-        
-        .confetti-1 { background: #ff6b6b; }
-        .confetti-2 { background: #4ecdc4; }
-        .confetti-3 { background: #45b7d1; }
-        .confetti-4 { background: #96ceb4; }
-        .confetti-5 { background: #f39c12; }
-        .confetti-6 { background: #e74c3c; }
-        .confetti-7 { background: #9b59b6; }
-        .confetti-8 { background: #2ecc71; }
-        
-        @keyframes confetti-fall {
+
+        @keyframes confettiFall {
             0% {
                 transform: translateY(-100vh) rotate(0deg);
                 opacity: 1;
@@ -106,529 +107,635 @@
                 opacity: 0;
             }
         }
-        
-        .celebration-message {
+
+        /* Animation utility classes */
+        .animate-fadeIn {
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+
+        .animate-slideUp {
+            animation: slideInUp 0.4s ease-out;
+        }
+
+        .animate-bounce {
+            animation: bounce 0.4s ease-out;
+        }
+
+        /* Modal styles */
+        .modal-popup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 50px;
+            z-index: 1000;
             border-radius: 20px;
+            padding: 30px 50px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Success notification */
+        .success-notification {
+            background-color: #28a745;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+            border-radius: 9999px;
+            padding: 20px 32px;
+        }
+
+        /* Celebration message */
+        .celebration-message {
+            background: var(--primary-gradient);
+            color: white;
             font-size: 2em;
             font-weight: bold;
-            z-index: 1001;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
-            animation: celebrationPop 2s ease-out;
+            animation: fadeInScale 2s ease-out;
         }
-        
-        @keyframes celebrationPop {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-            }
-            20% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
+
+        /* Confetti styles */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 999;
+            pointer-events: none;
+            animation: confettiFall linear;
         }
-        
+
+        .confetti-1 { background: #ff6b6b; }
+        .confetti-2 { background: #4ecdc4; }
+        .confetti-3 { background: #45b7d1; }
+        .confetti-4 { background: #96ceb4; }
+        .confetti-5 { background: #f39c12; }
+        .confetti-6 { background: #e74c3c; }
+        .confetti-7 { background: #9b59b6; }
+        .confetti-8 { background: #2ecc71; }
+
+        /* Form input focus styles */
         input:focus {
             border-color: #667eea;
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Visually hidden but accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
         }
     </style>
 </head>
 <body class="min-h-screen p-5">
-    <div class="max-w-4xl mx-auto bg-white rounded-3xl p-8 shadow-2xl">
-        <h1 class="text-center text-gray-800 mb-8 text-5xl font-light">My Calorie Tracker</h1>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white px-4 py-2 rounded">
+        Skip to main content
+    </a>
+
+    <main id="main-content" class="max-w-4xl mx-auto bg-white rounded-3xl p-8 shadow-2xl">
+        <header>
+            <h1 class="text-center text-gray-800 mb-8 text-5xl font-light">My Calorie Tracker</h1>
+        </header>
         
-        <!-- Daily Goals Progress -->
-        <div class="bg-gray-50 p-5 rounded-2xl mb-8">
-            <div class="text-center text-gray-600 mb-5 text-lg">Daily Progress</div>
-            <div id="progress-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Progress items will be generated by JavaScript -->
+        <!-- Daily Progress Section -->
+        <section class="bg-gray-50 p-5 rounded-2xl mb-8" aria-labelledby="progress-heading">
+            <h2 id="progress-heading" class="text-center text-gray-600 mb-5 text-lg">Daily Progress</h2>
+            <div id="progress-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" role="group" aria-label="Nutrient progress indicators">
+                <!-- Progress bars will be inserted here -->
             </div>
-        </div>
+        </section>
         
-        <!-- Add Food Form -->
-        <div class="bg-gray-50 p-6 rounded-2xl mb-8">
-            <h3 class="mb-5 text-gray-800 text-xl">Add Food</h3>
-            <form id="food-form">
+        <!-- Add Food Form Section -->
+        <section class="bg-gray-50 p-6 rounded-2xl mb-8" aria-labelledby="add-food-heading">
+            <h2 id="add-food-heading" class="mb-5 text-gray-800 text-xl">Add Food</h2>
+            <form id="food-form" aria-label="Add food entry form" novalidate>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-end">
                     <div class="flex flex-col">
-                        <label for="food-name" class="font-semibold text-gray-600 mb-1 text-sm">Food Name</label>
-                        <input type="text" id="food-name" placeholder="e.g., Chicken Breast" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="food-name" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Food Name <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="food-name" 
+                            name="foodName"
+                            placeholder="e.g., Chicken Breast" 
+                            required
+                            autocomplete="off"
+                            aria-required="true"
+                            aria-describedby="food-name-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="food-name-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
                     <div class="flex flex-col">
-                        <label for="serving-size" class="font-semibold text-gray-600 mb-1 text-sm">Serving Size</label>
-                        <input type="text" id="serving-size" placeholder="e.g., 1 cup, 100g" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="serving-size" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Serving Size <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="serving-size" 
+                            name="servingSize"
+                            placeholder="e.g., 1 cup, 100g" 
+                            required
+                            autocomplete="off"
+                            aria-required="true"
+                            aria-describedby="serving-size-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="serving-size-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                <fieldset class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                    <legend class="sr-only">Nutritional Information</legend>
                     <div class="flex flex-col">
-                        <label for="calories" class="font-semibold text-gray-600 mb-1 text-sm">Calories</label>
-                        <input type="number" id="calories" step="0.1" min="0" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="calories" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Calories <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="calories" 
+                            name="calories"
+                            step="0.1" 
+                            min="0" 
+                            required
+                            aria-required="true"
+                            aria-describedby="calories-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="calories-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
                     <div class="flex flex-col">
-                        <label for="protein" class="font-semibold text-gray-600 mb-1 text-sm">Protein (g)</label>
-                        <input type="number" id="protein" step="0.1" min="0" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="protein" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Protein (g) <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="protein" 
+                            name="protein"
+                            step="0.1" 
+                            min="0" 
+                            required
+                            aria-required="true"
+                            aria-describedby="protein-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="protein-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
                     <div class="flex flex-col">
-                        <label for="carbs" class="font-semibold text-gray-600 mb-1 text-sm">Carbs (g)</label>
-                        <input type="number" id="carbs" step="0.1" min="0" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="carbs" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Carbs (g) <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="carbs" 
+                            name="carbs"
+                            step="0.1" 
+                            min="0" 
+                            required
+                            aria-required="true"
+                            aria-describedby="carbs-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="carbs-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
                     <div class="flex flex-col">
-                        <label for="fat" class="font-semibold text-gray-600 mb-1 text-sm">Fat (g)</label>
-                        <input type="number" id="fat" step="0.1" min="0" required
-                               class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <label for="fat" class="font-semibold text-gray-600 mb-1 text-sm">
+                            Fat (g) <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="fat" 
+                            name="fat"
+                            step="0.1" 
+                            min="0" 
+                            required
+                            aria-required="true"
+                            aria-describedby="fat-error"
+                            class="p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none">
+                        <span id="fat-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></span>
                     </div>
-                </div>
+                </fieldset>
                 
-                <button type="submit" class="add-btn w-full text-white border-0 py-3 px-8 rounded-lg text-base font-semibold cursor-pointer">
+                <button 
+                    type="submit" 
+                    class="btn-primary w-full text-white border-0 py-3 px-8 rounded-lg text-base font-semibold cursor-pointer"
+                    aria-label="Add food to daily log">
                     Add Food
                 </button>
             </form>
-        </div>
+        </section>
         
-        <!-- Food Log -->
-        <div class="bg-gray-50 p-6 rounded-2xl mb-5">
+        <!-- Food Log Section -->
+        <section class="bg-gray-50 p-6 rounded-2xl mb-5" aria-labelledby="food-log-heading">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-5 gap-4">
-                <h3 class="text-gray-800 text-xl">Today's Food Log</h3>
-                <button onclick="clearAllFood()" class="bg-red-500 hover:bg-red-600 text-white border-0 py-2 px-4 rounded text-sm cursor-pointer transition-colors">
+                <h2 id="food-log-heading" class="text-gray-800 text-xl">Today's Food Log</h2>
+                <button 
+                    id="clear-all-btn"
+                    class="bg-red-500 hover:bg-red-600 text-white border-0 py-2 px-4 rounded text-sm cursor-pointer transition-colors"
+                    aria-label="Clear all food entries for today">
                     Clear All
                 </button>
             </div>
-            <div id="food-list"></div>
-        </div>
-    </div>
+            <div id="food-list" role="region" aria-live="polite" aria-label="List of food entries">
+                <!-- Food items will be inserted here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification area for screen readers -->
+    <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="screen-reader-announcements"></div>
 
     <script>
-        // ===== CONFIGURATION =====
-        const NUTRIENTS = {
-            calories: {
-                label: 'Calories',
-                goal: 1800,
-                unit: '',
-                color: '#ff6b6b'
+        'use strict';
+
+        // Configuration
+        const CONFIG = {
+            NUTRIENTS: {
+                calories: { label: 'Calories', goal: 1800, unit: '', color: 'var(--color-calories)' },
+                protein: { label: 'Protein', goal: 150, unit: 'g', color: 'var(--color-protein)' },
+                carbs: { label: 'Carbs', goal: 150, unit: 'g', color: 'var(--color-carbs)' },
+                fat: { label: 'Fat', goal: 70, unit: 'g', color: 'var(--color-fat)' }
             },
-            protein: {
-                label: 'Protein',
-                goal: 150,
-                unit: 'g',
-                color: '#4ecdc4'
-            },
-            carbs: {
-                label: 'Carbs',
-                goal: 150,
-                unit: 'g',
-                color: '#45b7d1'
-            },
-            fat: {
-                label: 'Fat',
-                goal: 70,
-                unit: 'g',
-                color: '#96ceb4'
+            STORAGE_KEY: 'calorieTrackerData',
+            ANIMATIONS: {
+                SUCCESS: 800,
+                CELEBRATION: 3000,
+                CONFETTI_COUNT: 50
             }
         };
-        
-        const ANIMATION_TIMINGS = {
-            SUCCESS_POPUP: 800,
-            SUCCESS_POPUP_DURATION: 1200,
-            PROGRESS_BOUNCE: 400,
-            CELEBRATION_DURATION: 3000,
-            CONFETTI_STAGGER: 20
-        };
-        
-        const CONFETTI_CONFIG = {
-            COUNT: 100,
-            MIN_DURATION: 2,
-            MAX_DURATION: 4,
-            MIN_SIZE: 6,
-            MAX_SIZE: 14,
-            COLORS: ['confetti-1', 'confetti-2', 'confetti-3', 'confetti-4', 'confetti-5', 'confetti-6', 'confetti-7', 'confetti-8']
-        };
-        
-        // ===== STATE =====
-        let dailyTotals = {};
-        let foodEntries = [];
-        
-        // ===== CACHED DOM ELEMENTS =====
-        let elements = {};
-        
-        // ===== UTILITY FUNCTIONS =====
-        const roundToOneDecimal = (num) => Math.round(num * 10) / 10;
-        const calculatePercentage = (current, goal) => Math.min((current / goal) * 100, 100);
-        const getTodayString = () => new Date().toDateString();
-        const getRandomBetween = (min, max) => Math.random() * (max - min) + min;
-        
-        // ===== INITIALIZATION =====
-        function initializeApp() {
-            cacheElements();
-            initializeTotals();
-            setupEventListeners();
-            loadData();
-        }
-        
-        function cacheElements() {
-            elements = {
-                foodForm: document.getElementById('food-form'),
-                foodList: document.getElementById('food-list'),
-                progressGrid: document.getElementById('progress-grid'),
-                inputs: {
-                    foodName: document.getElementById('food-name'),
-                    servingSize: document.getElementById('serving-size'),
-                    calories: document.getElementById('calories'),
-                    protein: document.getElementById('protein'),
-                    carbs: document.getElementById('carbs'),
-                    fat: document.getElementById('fat')
-                }
-            };
-        }
-        
-        function initializeTotals() {
-            dailyTotals = {};
-            Object.keys(NUTRIENTS).forEach(key => {
-                dailyTotals[key] = 0;
-            });
-        }
-        
-        function setupEventListeners() {
-            elements.foodForm.addEventListener('submit', handleFormSubmission);
-        }
-        
-        // ===== COMPONENT CREATION =====
-        function createProgressBar(nutrientKey, nutrientData) {
-            return `
-                <div class="progress-item ${nutrientKey} bg-white p-4 rounded-xl text-center shadow-sm">
-                    <div class="text-sm text-gray-600 mb-2">${nutrientData.label}${nutrientData.unit ? ` (${nutrientData.unit})` : ''}</div>
-                    <div class="w-full h-2 bg-gray-200 rounded overflow-hidden my-2">
-                        <div class="progress-fill h-full rounded" id="${nutrientKey}-progress" style="background-color: ${nutrientData.color};"></div>
-                    </div>
-                    <div class="text-lg font-semibold text-gray-800" id="${nutrientKey}-text">0 / ${nutrientData.goal}</div>
-                </div>
-            `;
-        }
-        
-        function createFoodItemHTML(entry, isNewItem = false) {
-            const newItemClass = isNewItem ? 'new-item' : '';
-            return `
-                <div class="food-item ${newItemClass} bg-white p-4 rounded-xl mb-3 flex flex-col sm:flex-row sm:justify-between sm:items-center shadow-sm gap-3">
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-800">${entry.name} (${entry.servingSize})</div>
-                        <div class="text-sm text-gray-600">
-                            ${roundToOneDecimal(entry.calories)} cal • 
-                            ${roundToOneDecimal(entry.protein)}g protein • 
-                            ${roundToOneDecimal(entry.carbs)}g carbs • 
-                            ${roundToOneDecimal(entry.fat)}g fat
-                        </div>
-                    </div>
-                    <button onclick="deleteFood(${entry.id})" class="bg-red-500 hover:bg-red-600 text-white border-0 py-1 px-3 rounded text-sm cursor-pointer transition-colors self-start sm:self-center">
-                        Delete
-                    </button>
-                </div>
-            `;
-        }
-        
-        // ===== PROGRESS BAR MANAGEMENT =====
-        function initializeProgressBars() {
-            elements.progressGrid.innerHTML = Object.keys(NUTRIENTS)
-                .map(key => createProgressBar(key, NUTRIENTS[key]))
-                .join('');
-        }
-        
-        function updateProgressBars() {
-            const allGoalsMet = checkIfAllGoalsMet();
-            
-            Object.keys(NUTRIENTS).forEach(nutrientKey => {
-                updateSingleProgressBar(nutrientKey);
-            });
-            
-            if (allGoalsMet && foodEntries.length > 0) {
-                triggerConfettiCelebration();
+
+        // Main Application Class
+        class CalorieTracker {
+            constructor() {
+                this.foodEntries = [];
+                this.dailyTotals = this.initializeTotals();
+                this.elements = {};
+                this.init();
             }
-        }
-        
-        function updateSingleProgressBar(nutrientKey) {
-            const current = dailyTotals[nutrientKey];
-            const goal = NUTRIENTS[nutrientKey].goal;
-            const percentage = calculatePercentage(current, goal);
-            
-            const progressBar = document.getElementById(`${nutrientKey}-progress`);
-            const progressText = document.getElementById(`${nutrientKey}-text`);
-            const progressItem = document.querySelector(`.${nutrientKey}`);
-            
-            progressBar.style.width = percentage + '%';
-            progressText.textContent = `${roundToOneDecimal(current)} / ${goal}`;
-            
-            addTemporaryAnimation(progressItem, 'updated', ANIMATION_TIMINGS.PROGRESS_BOUNCE);
-        }
-        
-        function checkIfAllGoalsMet() {
-            return Object.keys(NUTRIENTS).every(nutrientKey => {
-                return dailyTotals[nutrientKey] >= NUTRIENTS[nutrientKey].goal;
-            });
-        }
-        
-        // ===== FOOD MANAGEMENT =====
-        function handleFormSubmission(e) {
-            e.preventDefault();
-            const foodEntry = createFoodEntryFromForm();
-            addFoodEntry(foodEntry);
-            clearForm();
-        }
-        
-        function createFoodEntryFromForm() {
-            return {
-                id: Date.now(),
-                name: elements.inputs.foodName.value,
-                servingSize: elements.inputs.servingSize.value,
-                calories: parseFloat(elements.inputs.calories.value),
-                protein: parseFloat(elements.inputs.protein.value),
-                carbs: parseFloat(elements.inputs.carbs.value),
-                fat: parseFloat(elements.inputs.fat.value)
-            };
-        }
-        
-        function addFoodEntry(foodEntry) {
-            foodEntries.push(foodEntry);
-            showSuccessAnimation();
-            updateTotals();
-            displayFoodLog();
-            saveData();
-        }
-        
-        function clearForm() {
-            elements.foodForm.reset();
-        }
-        
-        function deleteFood(id) {
-            foodEntries = foodEntries.filter(entry => entry.id !== id);
-            updateTotals();
-            displayFoodLog();
-            saveData();
-        }
-        
-        function clearAllFood() {
-            if (confirm('Are you sure you want to clear all food entries for today?')) {
-                foodEntries = [];
-                updateTotals();
-                displayFoodLog();
-                saveData();
+
+            // Initialize the application
+            init() {
+                this.cacheElements();
+                this.loadData();
+                this.renderProgressBars();
+                this.renderFoodList();
+                this.attachEventListeners();
+                this.announceToScreenReader('Calorie tracker loaded and ready');
             }
-        }
-        
-        // ===== CALCULATIONS =====
-        function updateTotals() {
-            initializeTotals();
-            
-            foodEntries.forEach(entry => {
-                Object.keys(NUTRIENTS).forEach(key => {
-                    dailyTotals[key] += entry[key] || 0;
-                });
-            });
-            
-            updateProgressBars();
-        }
-        
-        // ===== DISPLAY =====
-        function displayFoodLog() {
-            if (foodEntries.length === 0) {
-                elements.foodList.innerHTML = '<p class="text-center text-gray-500 py-5">No food logged today</p>';
-                return;
-            }
-            
-            elements.foodList.innerHTML = foodEntries
-                .map((entry, index) => createFoodItemHTML(entry, index === foodEntries.length - 1))
-                .join('');
-        }
-        
-        // ===== ANIMATIONS =====
-        function showSuccessAnimation() {
-            const addButton = document.querySelector('.add-btn');
-            
-            addButton.classList.add('success');
-            addButton.textContent = '✓ Added!';
-            
-            const successNotification = createSuccessNotification();
-            document.body.appendChild(successNotification);
-            
-            setTimeout(() => {
-                resetAddButton(addButton);
-            }, ANIMATION_TIMINGS.SUCCESS_POPUP);
-            
-            setTimeout(() => {
-                removeElementSafely(successNotification);
-            }, ANIMATION_TIMINGS.SUCCESS_POPUP_DURATION);
-        }
-        
-        function createSuccessNotification() {
-            const notification = document.createElement('div');
-            notification.className = 'success-popup fixed top-1/2 left-1/2 bg-green-500 text-white py-5 px-8 rounded-full text-xl font-semibold z-50';
-            notification.style.transform = 'translate(-50%, -50%) scale(0)';
-            notification.innerHTML = '✓ Food Added!';
-            return notification;
-        }
-        
-        function resetAddButton(button) {
-            button.classList.remove('success');
-            button.textContent = 'Add Food';
-        }
-        
-        function addTemporaryAnimation(element, className, duration) {
-            element.classList.add(className);
-            setTimeout(() => {
-                element.classList.remove(className);
-            }, duration);
-        }
-        
-        // ===== CONFETTI CELEBRATION =====
-        function triggerConfettiCelebration() {
-            if (document.querySelector('.celebration-message')) return;
-            
-            const celebrationMessage = createCelebrationMessage();
-            document.body.appendChild(celebrationMessage);
-            createConfettiShower();
-            
-            setTimeout(() => {
-                removeElementSafely(celebrationMessage);
-            }, ANIMATION_TIMINGS.CELEBRATION_DURATION);
-        }
-        
-        function createCelebrationMessage() {
-            const message = document.createElement('div');
-            message.className = 'celebration-message';
-            message.innerHTML = '🎉 ALL GOALS ACHIEVED! 🎉<br><small>You crushed it today!</small>';
-            return message;
-        }
-        
-        function createConfettiShower() {
-            for (let i = 0; i < CONFETTI_CONFIG.COUNT; i++) {
-                setTimeout(() => {
-                    createSingleConfetti();
-                }, i * CONFETTI_CONFIG.STAGGER);
-            }
-        }
-        
-        function createSingleConfetti() {
-            const confetti = document.createElement('div');
-            const confettiProperties = getRandomConfettiProperties();
-            
-            applyConfettiProperties(confetti, confettiProperties);
-            document.body.appendChild(confetti);
-            
-            scheduleConfettiCleanup(confetti, confettiProperties.duration);
-        }
-        
-        function getRandomConfettiProperties() {
-            const duration = getRandomBetween(CONFETTI_CONFIG.MIN_DURATION, CONFETTI_CONFIG.MAX_DURATION);
-            const size = getRandomBetween(CONFETTI_CONFIG.MIN_SIZE, CONFETTI_CONFIG.MAX_SIZE);
-            const colorClass = CONFETTI_CONFIG.COLORS[Math.floor(Math.random() * CONFETTI_CONFIG.COLORS.length)];
-            
-            return {
-                duration,
-                size,
-                colorClass,
-                left: Math.random() * 100 + '%',
-                borderRadius: Math.random() > 0.5 ? '50%' : '0%'
-            };
-        }
-        
-        function applyConfettiProperties(confetti, properties) {
-            confetti.className = `confetti ${properties.colorClass}`;
-            confetti.style.left = properties.left;
-            confetti.style.top = '-10px';
-            confetti.style.width = properties.size + 'px';
-            confetti.style.height = properties.size + 'px';
-            confetti.style.borderRadius = properties.borderRadius;
-            confetti.style.animationDuration = properties.duration + 's';
-            confetti.style.animationName = 'confetti-fall';
-            confetti.style.animationTimingFunction = 'linear';
-        }
-        
-        function scheduleConfettiCleanup(confetti, duration) {
-            setTimeout(() => {
-                removeElementSafely(confetti);
-            }, duration * 1000);
-        }
-        
-        // ===== DATA PERSISTENCE =====
-        function saveData() {
-            try {
-                const data = {
-                    date: getTodayString(),
-                    entries: foodEntries,
-                    totals: dailyTotals
-                };
-                localStorage.setItem('calorieTracker', JSON.stringify(data));
-            } catch (e) {
-                console.log('Data saving disabled in this environment - will work when hosted!');
-            }
-        }
-        
-        function loadData() {
-            try {
-                const saved = localStorage.getItem('calorieTracker');
-                const today = getTodayString();
-                
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.date === today) {
-                        loadSavedData(data);
-                    } else {
-                        resetToNewDay();
+
+            // Cache DOM elements for better performance
+            cacheElements() {
+                this.elements = {
+                    form: document.getElementById('food-form'),
+                    foodList: document.getElementById('food-list'),
+                    progressGrid: document.getElementById('progress-grid'),
+                    clearAllBtn: document.getElementById('clear-all-btn'),
+                    announcements: document.getElementById('screen-reader-announcements'),
+                    inputs: {
+                        foodName: document.getElementById('food-name'),
+                        servingSize: document.getElementById('serving-size'),
+                        calories: document.getElementById('calories'),
+                        protein: document.getElementById('protein'),
+                        carbs: document.getElementById('carbs'),
+                        fat: document.getElementById('fat')
                     }
+                };
+            }
+
+            // Initialize nutrient totals
+            initializeTotals() {
+                return Object.keys(CONFIG.NUTRIENTS).reduce((acc, key) => {
+                    acc[key] = 0;
+                    return acc;
+                }, {});
+            }
+
+            // Attach event listeners using event delegation
+            attachEventListeners() {
+                // Form submission
+                this.elements.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+
+                // Clear all button
+                this.elements.clearAllBtn.addEventListener('click', () => this.clearAllFood());
+
+                // Event delegation for delete buttons
+                this.elements.foodList.addEventListener('click', (e) => {
+                    if (e.target.matches('[data-delete-id]')) {
+                        const id = parseInt(e.target.dataset.deleteId);
+                        this.deleteFood(id);
+                    }
+                });
+
+                // Form validation on input
+                Object.values(this.elements.inputs).forEach(input => {
+                    input.addEventListener('blur', () => this.validateField(input));
+                    input.addEventListener('input', () => this.clearFieldError(input));
+                });
+            }
+
+            // Form validation
+            validateField(field) {
+                const errorElement = document.getElementById(`${field.name}-error`);
+                let isValid = true;
+                let errorMessage = '';
+
+                if (field.hasAttribute('required') && !field.value.trim()) {
+                    errorMessage = 'This field is required';
+                    isValid = false;
+                } else if (field.type === 'number' && parseFloat(field.value) < 0) {
+                    errorMessage = 'Value must be positive';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    field.setAttribute('aria-invalid', 'true');
+                    errorElement.textContent = errorMessage;
+                    errorElement.classList.remove('hidden');
                 } else {
-                    resetToNewDay();
+                    field.setAttribute('aria-invalid', 'false');
+                    errorElement.classList.add('hidden');
                 }
-            } catch (e) {
-                resetToNewDay();
+
+                return isValid;
             }
-            
-            initializeProgressBars();
-            updateProgressBars();
-            displayFoodLog();
-        }
-        
-        function loadSavedData(data) {
-            foodEntries = data.entries || [];
-            dailyTotals = data.totals || {};
-            ensureAllNutrientsHaveValues();
-        }
-        
-        function resetToNewDay() {
-            foodEntries = [];
-            initializeTotals();
-        }
-        
-        function ensureAllNutrientsHaveValues() {
-            Object.keys(NUTRIENTS).forEach(key => {
-                if (dailyTotals[key] === undefined) {
-                    dailyTotals[key] = 0;
+
+            clearFieldError(field) {
+                const errorElement = document.getElementById(`${field.name}-error`);
+                field.setAttribute('aria-invalid', 'false');
+                errorElement.classList.add('hidden');
+            }
+
+            // Handle form submission
+            handleFormSubmit(e) {
+                e.preventDefault();
+
+                // Validate all fields
+                const isValid = Object.values(this.elements.inputs).every(input => this.validateField(input));
+                if (!isValid) {
+                    this.announceToScreenReader('Please fix the errors in the form');
+                    return;
                 }
-            });
-        }
-        
-        // ===== UTILITY =====
-        function removeElementSafely(element) {
-            if (document.body.contains(element)) {
-                document.body.removeChild(element);
+
+                const foodEntry = this.createFoodEntry();
+                this.addFoodEntry(foodEntry);
+                this.showSuccessAnimation();
+                this.elements.form.reset();
+                this.announceToScreenReader(`Added ${foodEntry.name} to your food log`);
             }
-        }
-        
-        // ===== APP START =====
-        initializeApp();
-    </script>
-</body>
-</html>
+
+            // Create food entry from form data
+            createFoodEntry() {
+                return {
+                    id: Date.now(),
+                    name: this.elements.inputs.foodName.value.trim(),
+                    servingSize: this.elements.inputs.servingSize.value.trim(),
+                    calories: parseFloat(this.elements.inputs.calories.value),
+                    protein: parseFloat(this.elements.inputs.protein.value),
+                    carbs: parseFloat(this.elements.inputs.carbs.value),
+                    fat: parseFloat(this.elements.inputs.fat.value),
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            // Add food entry
+            addFoodEntry(entry) {
+                this.foodEntries.push(entry);
+                this.updateTotals();
+                this.renderFoodList();
+                this.updateProgressBars();
+                this.saveData();
+                this.checkGoalsAchieved();
+            }
+
+            // Delete food entry
+            deleteFood(id) {
+                const entry = this.foodEntries.find(e => e.id === id);
+                if (!entry) return;
+
+                if (confirm(`Are you sure you want to delete ${entry.name}?`)) {
+                    this.foodEntries = this.foodEntries.filter(e => e.id !== id);
+                    this.updateTotals();
+                    this.renderFoodList();
+                    this.updateProgressBars();
+                    this.saveData();
+                    this.announceToScreenReader(`Deleted ${entry.name} from your food log`);
+                }
+            }
+
+            // Clear all food entries
+            clearAllFood() {
+                if (this.foodEntries.length === 0) {
+                    alert('No entries to clear');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to clear all food entries for today?')) {
+                    this.foodEntries = [];
+                    this.updateTotals();
+                    this.renderFoodList();
+                    this.updateProgressBars();
+                    this.saveData();
+                    this.announceToScreenReader('Cleared all food entries');
+                }
+            }
+
+            // Update nutrient totals
+            updateTotals() {
+                this.dailyTotals = this.initializeTotals();
+                this.foodEntries.forEach(entry => {
+                    Object.keys(CONFIG.NUTRIENTS).forEach(key => {
+                        this.dailyTotals[key] += entry[key] || 0;
+                    });
+                });
+            }
+
+            // Render progress bars
+            renderProgressBars() {
+                this.elements.progressGrid.innerHTML = Object.entries(CONFIG.NUTRIENTS)
+                    .map(([key, nutrient]) => this.createProgressBar(key, nutrient))
+                    .join('');
+            }
+
+            // Create progress bar HTML
+            createProgressBar(key, nutrient) {
+                const current = this.dailyTotals[key];
+                const percentage = Math.min((current / nutrient.goal) * 100, 100);
+                const roundedCurrent = this.roundToOneDecimal(current);
+
+                return `
+                    <article class="bg-white p-4 rounded-xl text-center shadow-sm" 
+                             role="progressbar" 
+                             aria-valuenow="${current}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="${nutrient.goal}"
+                             aria-label="${nutrient.label} progress: ${roundedCurrent} of ${nutrient.goal}${nutrient.unit}">
+                        <h3 class="text-sm text-gray-600 mb-2">
+                            ${nutrient.label}${nutrient.unit ? ` (${nutrient.unit})` : ''}
+                        </h3>
+                        <div class="w-full h-2 bg-gray-200 rounded overflow-hidden my-2">
+                            <div class="progress-fill h-full rounded" 
+                                 id="${key}-progress"
+                                 style="width: ${percentage}%; background-color: ${nutrient.color}"></div>
+                        </div>
+                        <p class="text-lg font-semibold text-gray-800" id="${key}-text">
+                            ${roundedCurrent} / ${nutrient.goal}
+                        </p>
+                    </article>
+                `;
+            }
+
+            // Update progress bars with animation
+            updateProgressBars() {
+                Object.entries(CONFIG.NUTRIENTS).forEach(([key, nutrient]) => {
+                    const current = this.dailyTotals[key];
+                    const percentage = Math.min((current / nutrient.goal) * 100, 100);
+                    const progressBar = document.getElementById(`${key}-progress`);
+                    const progressText = document.getElementById(`${key}-text`);
+
+                    if (progressBar && progressText) {
+                        progressBar.style.width = `${percentage}%`;
+                        progressText.textContent = `${this.roundToOneDecimal(current)} / ${nutrient.goal}`;
+                        
+                        // Add bounce animation
+                        progressBar.parentElement.parentElement.classList.add('animate-bounce');
+                        setTimeout(() => {
+                            progressBar.parentElement.parentElement.classList.remove('animate-bounce');
+                        }, CONFIG.ANIMATIONS.SUCCESS);
+                    }
+                });
+            }
+
+            // Render food list
+            renderFoodList() {
+                if (this.foodEntries.length === 0) {
+                    this.elements.foodList.innerHTML = `
+                        <p class="text-center text-gray-500 py-5">No food logged today</p>
+                    `;
+                    return;
+                }
+
+                this.elements.foodList.innerHTML = this.foodEntries
+                    .map((entry, index) => this.createFoodItemHTML(entry, index === this.foodEntries.length - 1))
+                    .join('');
+            }
+
+            // Create food item HTML
+            createFoodItemHTML(entry, isNew = false) {
+                const animationClass = isNew ? 'animate-slideUp' : '';
+                return `
+                    <article class="food-item ${animationClass} bg-white p-4 rounded-xl mb-3 flex flex-col sm:flex-row sm:justify-between sm:items-center shadow-sm gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800">${this.escapeHtml(entry.name)} (${this.escapeHtml(entry.servingSize)})</h3>
+                            <p class="text-sm text-gray-600">
+                                ${this.roundToOneDecimal(entry.calories)} cal • 
+                                ${this.roundToOneDecimal(entry.protein)}g protein • 
+                                ${this.roundToOneDecimal(entry.carbs)}g carbs • 
+                                ${this.roundToOneDecimal(entry.fat)}g fat
+                            </p>
+                        </div>
+                        <button 
+                            data-delete-id="${entry.id}"
+                            class="bg-red-500 hover:bg-red-600 text-white border-0 py-1 px-3 rounded text-sm cursor-pointer transition-colors self-start sm:self-center"
+                            aria-label="Delete ${this.escapeHtml(entry.name)}">
+                            Delete
+                        </button>
+                    </article>
+                `;
+            }
+
+            // Show success animation
+            showSuccessAnimation() {
+                const submitBtn = this.elements.form.querySelector('[type="submit"]');
+                submitBtn.classList.add('success');
+                submitBtn.textContent = '✓ Added!';
+                submitBtn.disabled = true;
+
+                // Create success notification
+                const notification = document.createElement('div');
+                notification.className = 'modal-popup success-notification animate-fadeIn';
+                notification.setAttribute('role', 'status');
+                notification.setAttribute('aria-live', 'polite');
+                notification.innerHTML = '✓ Food Added!';
+                document.body.appendChild(notification);
+
+                // Reset button and remove notification
+                setTimeout(() => {
+                    submitBtn.classList.remove('success');
+                    submitBtn.textContent = 'Add Food';
+                    submitBtn.disabled = false;
+                }, CONFIG.ANIMATIONS.SUCCESS);
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, CONFIG.ANIMATIONS.SUCCESS * 2);
+            }
+
+            // Check if all goals are achieved
+            checkGoalsAchieved() {
+                const allGoalsMet = Object.keys(CONFIG.NUTRIENTS).every(key => {
+                    return this.dailyTotals[key] >= CONFIG.NUTRIENTS[key].goal;
+                });
+
+                if (allGoalsMet && this.foodEntries.length > 0) {
+                    this.triggerCelebration();
+                }
+            }
+
+            // Trigger celebration animation
+            triggerCelebration() {
+                // Prevent multiple celebrations
+                if (document.querySelector('.celebration-message')) return;
+
+                this.announceToScreenReader('Congratulations! You achieved all your daily nutrition goals!');
+
+                // Create celebration message
+                const message = document.createElement('div');
+                message.className = 'modal-popup celebration-message';
+                message.setAttribute('role', 'status');
+                message.setAttribute('aria-live', 'assertive');
+                message.innerHTML = '🎉 ALL GOALS ACHIEVED! 🎉<br><small>You crushed it today!</small>';
+                document.body.appendChild(message);
+
+                // Create confetti
+                this.createConfetti();
+
+                // Remove celebration after animation
+                setTimeout(() => {
+                    if (message.parentNode) {
+                        message.remove();
+                    }
+                }, CONFIG.ANIMATIONS.CELEBRATION);
+            }
+
+            // Create confetti animation
+            createConfetti() {
+                const colors = ['confetti-1', 'confetti-2', 'confetti-3', 'confetti-4', 
+                               'confetti-5', 'confetti-6', 'confetti-7', 'confetti-8'];
+
+                for (let i = 0; i < CONFIG.ANIMATIONS.CONFETTI_COUNT; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        const colorClass = colors[Math.floor(Math.random() * colors.length)];
+                        const size = Math.random() * 8 + 6;
+                        const duration = Math.random() * 2 + 2;
+                        const left = Math.random() * 100;
+
+                        confetti.className = `confetti ${colorClass}`;
+                        confetti.style.left = `${left}%`;
+                        confetti.style.width = `${size}px`;
+                        confetti.style.height = `${size}px`;
+                        confetti.style.animationDuration = `${duration}s`;
+                        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+
+                        document.body.appendChild(confetti);
+
+                        //
