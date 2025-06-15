@@ -436,22 +436,31 @@
                 // Form validation on input
                 Object.values(this.elements.inputs).forEach(input => {
                     input.addEventListener('blur', () => this.validateField(input));
-                    input.addEventListener('input', () => this.clearFieldError(input));
+                    // Clear error on input to give immediate feedback
+                    input.addEventListener('input', () => {
+                        if (input.hasAttribute('aria-invalid') && input.getAttribute('aria-invalid') === 'true') {
+                            this.clearFieldError(input);
+                        }
+                    });
                 });
             }
 
             // Form validation
             validateField(field) {
-                const errorElement = document.getElementById(`${field.name}-error`);
+                const errorId = field.id + '-error';
+                const errorElement = document.getElementById(errorId);
                 let isValid = true;
                 let errorMessage = '';
 
                 if (field.hasAttribute('required') && !field.value.trim()) {
                     errorMessage = 'This field is required';
                     isValid = false;
-                } else if (field.type === 'number' && parseFloat(field.value) < 0) {
-                    errorMessage = 'Value must be positive';
-                    isValid = false;
+                } else if (field.type === 'number') {
+                    const value = parseFloat(field.value);
+                    if (isNaN(value) || value < 0) {
+                        errorMessage = 'Please enter a valid positive number';
+                        isValid = false;
+                    }
                 }
 
                 if (!isValid) {
@@ -467,9 +476,12 @@
             }
 
             clearFieldError(field) {
-                const errorElement = document.getElementById(`${field.name}-error`);
-                field.setAttribute('aria-invalid', 'false');
-                errorElement.classList.add('hidden');
+                const errorId = field.id + '-error';
+                const errorElement = document.getElementById(errorId);
+                if (errorElement) {
+                    field.setAttribute('aria-invalid', 'false');
+                    errorElement.classList.add('hidden');
+                }
             }
 
             // Handle form submission
@@ -477,8 +489,13 @@
                 e.preventDefault();
 
                 // Validate all fields
-                const isValid = Object.values(this.elements.inputs).every(input => this.validateField(input));
-                if (!isValid) {
+                let allValid = true;
+                Object.values(this.elements.inputs).forEach(input => {
+                    const isValid = this.validateField(input);
+                    if (!isValid) allValid = false;
+                });
+
+                if (!allValid) {
                     this.announceToScreenReader('Please fix the errors in the form');
                     return;
                 }
@@ -492,16 +509,21 @@
 
             // Create food entry from form data
             createFoodEntry() {
-                return {
+                const entry = {
                     id: Date.now(),
                     name: this.elements.inputs.foodName.value.trim(),
                     servingSize: this.elements.inputs.servingSize.value.trim(),
-                    calories: parseFloat(this.elements.inputs.calories.value),
-                    protein: parseFloat(this.elements.inputs.protein.value),
-                    carbs: parseFloat(this.elements.inputs.carbs.value),
-                    fat: parseFloat(this.elements.inputs.fat.value),
+                    calories: parseFloat(this.elements.inputs.calories.value) || 0,
+                    protein: parseFloat(this.elements.inputs.protein.value) || 0,
+                    carbs: parseFloat(this.elements.inputs.carbs.value) || 0,
+                    fat: parseFloat(this.elements.inputs.fat.value) || 0,
                     timestamp: new Date().toISOString()
                 };
+                
+                // Debug logging (remove in production)
+                console.log('Created food entry:', entry);
+                
+                return entry;
             }
 
             // Add food entry
@@ -751,6 +773,11 @@
             // Data persistence methods
             saveData() {
                 try {
+                    // Check if localStorage is available
+                    if (!this.isLocalStorageAvailable()) {
+                        return;
+                    }
+                    
                     const data = {
                         date: new Date().toDateString(),
                         entries: this.foodEntries,
@@ -759,13 +786,17 @@
                     };
                     localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
                 } catch (error) {
-                    console.warn('Failed to save data:', error);
-                    // Could show a non-intrusive notification here
+                    // Silently fail - localStorage might not be available
                 }
             }
 
             loadData() {
                 try {
+                    // Check if localStorage is available
+                    if (!this.isLocalStorageAvailable()) {
+                        return;
+                    }
+                    
                     const savedData = localStorage.getItem(CONFIG.STORAGE_KEY);
                     if (!savedData) return;
 
@@ -781,10 +812,21 @@
                         localStorage.removeItem(CONFIG.STORAGE_KEY);
                     }
                 } catch (error) {
-                    console.warn('Failed to load data:', error);
-                    // Reset to clean state on error
+                    // Silently fail - localStorage might not be available
                     this.foodEntries = [];
                     this.dailyTotals = this.initializeTotals();
+                }
+            }
+            
+            // Check if localStorage is available
+            isLocalStorageAvailable() {
+                try {
+                    const test = '__localStorage_test__';
+                    localStorage.setItem(test, test);
+                    localStorage.removeItem(test);
+                    return true;
+                } catch (e) {
+                    return false;
                 }
             }
 
